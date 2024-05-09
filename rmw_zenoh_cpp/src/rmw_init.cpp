@@ -371,11 +371,11 @@ rmw_shutdown(rmw_context_t * context)
   if (context->impl->shm_manager.has_value()) {
     z_drop(z_move(context->impl->shm_manager.value()));
   }
-  // Close the zenoh session
-  if (z_close(z_move(context->impl->session)) < 0) {
-    RMW_SET_ERROR_MSG("Error while closing zenoh session");
-    return RMW_RET_ERROR;
-  }
+  //// Close the zenoh session
+  //if (z_close(z_move(context->impl->session)) < 0) {
+  //  RMW_SET_ERROR_MSG("Error while closing zenoh session");
+  //  return RMW_RET_ERROR;
+  //}
 
   context->impl->is_shutdown = true;
 
