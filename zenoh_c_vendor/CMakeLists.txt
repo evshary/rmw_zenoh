@@ -26,8 +26,8 @@ set(ZENOHC_CARGO_FLAGS "--no-default-features$<SEMICOLON>--features=zenoh/transp
 
 # Set VCS_VERSION to include latest changes from zenoh-c https://github.com/eclipse-zenoh/zenoh-c/pull/340.
 ament_vendor(zenoh_c_vendor
-  VCS_URL https://github.com/eclipse-zenoh/zenoh-c.git
-  VCS_VERSION 68ab0c1faa2c3521680352778e618d95f15e2e95
+  VCS_URL https://github.com/evshary/zenoh-c.git
+  VCS_VERSION 895bfa44ca184ef219fd58d53708dc709f000886
   CMAKE_ARGS
     "-DZENOHC_CARGO_FLAGS=${ZENOHC_CARGO_FLAGS}"
 )
