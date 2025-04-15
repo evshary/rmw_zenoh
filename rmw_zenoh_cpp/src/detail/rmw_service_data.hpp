@@ -40,6 +40,7 @@
 
 namespace rmw_zenoh_cpp
 {
+extern AddressTracker g_service_tracker;
 
 ///=============================================================================
 class ServiceData final : public std::enable_shared_from_this<ServiceData>

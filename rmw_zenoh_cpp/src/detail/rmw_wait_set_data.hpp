@@ -17,6 +17,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <unordered_map>
 
 #include "rmw/rmw.h"
 
@@ -54,6 +55,33 @@ struct rmw_wait_set_data_t
   bool triggered{false};
 
   rmw_context_t * context;
+};
+
+// The class is to track the addresses of the objects used in rmw_wait. While rmw_wait only 
+// provides pointers to the object, we need a way to validate if that address is still valid.
+// While entering the rmw_wait function, subscription, guard_condition, service, client, and event
+// might be destroyed in other thread.
+class AddressTracker final
+{
+public:
+  void add_address(void* ptr) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    alive_map_[ptr] = true;
+  }
+
+  void remove_address(void* ptr) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    alive_map_.erase(ptr);
+  }
+
+  bool is_exist(void* ptr) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return alive_map_.count(ptr) > 0;
+  }
+
+private:
+  std::unordered_map<void*, bool> alive_map_;
+  std::mutex mutex_;
 };
 }  // namespace rmw_zenoh_cpp
 

@@ -42,6 +42,8 @@
 
 namespace rmw_zenoh_cpp
 {
+AddressTracker g_service_tracker;
+
 ///=============================================================================
 std::shared_ptr<ServiceData> ServiceData::make(
   std::shared_ptr<zenoh::Session> session,
@@ -196,7 +198,7 @@ ServiceData::ServiceData(
   is_shutdown_(false),
   initialized_(false)
 {
-  // Do nothing.
+  g_service_tracker.add_address(this);
 }
 
 ///=============================================================================
@@ -461,6 +463,7 @@ ServiceData::~ServiceData()
       entity_->topic_info().value().name_.c_str()
     );
   }
+  g_service_tracker.remove_address(this);
 }
 
 //==============================================================================

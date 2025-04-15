@@ -43,6 +43,8 @@
 
 namespace rmw_zenoh_cpp
 {
+extern AddressTracker g_subscription_tracker;
+
 ///=============================================================================
 class SubscriptionData final : public std::enable_shared_from_this<SubscriptionData>
 {

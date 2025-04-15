@@ -27,6 +27,8 @@
 
 namespace rmw_zenoh_cpp
 {
+extern AddressTracker g_event_tracker;
+
 ///=============================================================================
 // A struct that represents an event status in rmw_zenoh.
 enum rmw_zenoh_event_type_t
@@ -99,6 +101,9 @@ private:
 class EventsManager
 {
 public:
+  EventsManager();
+  ~EventsManager();
+
   /// @brief  Set the callback to be triggered when the relevant event is triggered.
   /// @param event_id the id of the event
   /// @param callback the callback to trigger for this event.

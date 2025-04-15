@@ -2036,7 +2036,7 @@ check_and_attach_condition(
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       rmw_zenoh_cpp::GuardCondition * gc =
         static_cast<rmw_zenoh_cpp::GuardCondition *>(guard_conditions->guard_conditions[i]);
-      if (gc == nullptr) {
+      if (gc == nullptr || !rmw_zenoh_cpp::g_guard_condition_tracker.is_exist(gc)) {
         continue;
       }
       if (gc->check_and_attach_condition_if_not(wait_set_data)) {
@@ -2058,7 +2058,7 @@ check_and_attach_condition(
       }
 
       auto event_data = static_cast<rmw_zenoh_cpp::EventsManager *>(event->data);
-      if (event_data == nullptr) {
+      if (event_data == nullptr || !rmw_zenoh_cpp::g_event_tracker.is_exist(event_data)) {
         continue;
       }
 
@@ -2072,7 +2072,7 @@ check_and_attach_condition(
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
       rmw_zenoh_cpp::SubscriptionData * sub_data =
         static_cast<rmw_zenoh_cpp::SubscriptionData *>(subscriptions->subscribers[i]);
-      if (sub_data == nullptr) {
+      if (sub_data == nullptr || !rmw_zenoh_cpp::g_subscription_tracker.is_exist(sub_data)) {
         continue;
       }
       if (sub_data->queue_has_data_and_attach_condition_if_not(wait_set_data)) {
@@ -2084,7 +2084,7 @@ check_and_attach_condition(
   if (services) {
     for (size_t i = 0; i < services->service_count; ++i) {
       auto serv_data = static_cast<rmw_zenoh_cpp::ServiceData *>(services->services[i]);
-      if (serv_data == nullptr) {
+      if (serv_data == nullptr || !rmw_zenoh_cpp::g_service_tracker.is_exist(serv_data)) {
         continue;
       }
       if (serv_data->queue_has_data_and_attach_condition_if_not(wait_set_data)) {
@@ -2097,7 +2097,7 @@ check_and_attach_condition(
     for (size_t i = 0; i < clients->client_count; ++i) {
       rmw_zenoh_cpp::ClientData * client_data =
         static_cast<rmw_zenoh_cpp::ClientData *>(clients->clients[i]);
-      if (client_data == nullptr) {
+      if (client_data == nullptr || !rmw_zenoh_cpp::g_client_tracker.is_exist(client_data)) {
         continue;
       }
       if (client_data->queue_has_data_and_attach_condition_if_not(wait_set_data)) {
@@ -2199,8 +2199,9 @@ rmw_wait(
       if (gc == nullptr) {
         continue;
       }
-      if (!gc->detach_condition_and_is_trigger_set()) {
-        // Setting to nullptr lets rcl know that this guard condition is not ready
+      if (!rmw_zenoh_cpp::g_guard_condition_tracker.is_exist(gc) ||
+            !gc->detach_condition_and_is_trigger_set()) {
+        // Setting to nullptr lets rcl know that this guard condition is not available or ready
         guard_conditions->guard_conditions[i] = nullptr;
       } else {
         wait_result = true;
@@ -2222,8 +2223,9 @@ rmw_wait(
         continue;
       }
 
-      if (event_data->detach_condition_and_event_queue_is_empty(zenoh_event_type)) {
-        // Setting to nullptr lets rcl know that this subscription is not ready
+      if (!rmw_zenoh_cpp::g_event_tracker.is_exist(event_data) ||
+            event_data->detach_condition_and_event_queue_is_empty(zenoh_event_type)) {
+        // Setting to nullptr lets rcl know that this event is not available or ready
         events->events[i] = nullptr;
       } else {
         wait_result = true;
@@ -2238,8 +2240,9 @@ rmw_wait(
       if (sub_data == nullptr) {
         continue;
       }
-      if (sub_data->detach_condition_and_queue_is_empty()) {
-        // Setting to nullptr lets rcl know that this subscription is not ready
+      if (!rmw_zenoh_cpp::g_subscription_tracker.is_exist(sub_data) || 
+            sub_data->detach_condition_and_queue_is_empty()) {
+        // Setting to nullptr lets rcl know that this subscription is not available or ready
         subscriptions->subscribers[i] = nullptr;
       } else {
         wait_result = true;
@@ -2254,8 +2257,9 @@ rmw_wait(
         continue;
       }
 
-      if (serv_data->detach_condition_and_queue_is_empty()) {
-        // Setting to nullptr lets rcl know that this service is not ready
+      if (!rmw_zenoh_cpp::g_service_tracker.is_exist(serv_data) ||
+            serv_data->detach_condition_and_queue_is_empty()) {
+        // Setting to nullptr lets rcl know that this service is not available or ready
         services->services[i] = nullptr;
       } else {
         wait_result = true;
@@ -2271,8 +2275,9 @@ rmw_wait(
         continue;
       }
 
-      if (client_data->detach_condition_and_queue_is_empty()) {
-        // Setting to nullptr lets rcl know that this client is not ready
+      if (!rmw_zenoh_cpp::g_client_tracker.is_exist(client_data) ||
+            client_data->detach_condition_and_queue_is_empty()) {
+        // Setting to nullptr lets rcl know that this client is not available or ready
         clients->clients[i] = nullptr;
       } else {
         wait_result = true;

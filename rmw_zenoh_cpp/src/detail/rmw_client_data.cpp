@@ -45,6 +45,8 @@
 
 namespace rmw_zenoh_cpp
 {
+AddressTracker g_client_tracker;
+
 ///=============================================================================
 std::shared_ptr<ClientData> ClientData::make(
   std::shared_ptr<zenoh::Session> session,
@@ -169,6 +171,8 @@ ClientData::ClientData(
   }
 
   initialized_ = true;
+
+  g_client_tracker.add_address(this);
 }
 
 ///=============================================================================
@@ -428,6 +432,7 @@ ClientData::~ClientData()
       entity_->topic_info().value().name_.c_str()
     );
   }
+  g_client_tracker.remove_address(this);
 }
 
 //==============================================================================

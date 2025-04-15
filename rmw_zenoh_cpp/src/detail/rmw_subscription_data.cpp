@@ -41,6 +41,8 @@
 
 namespace rmw_zenoh_cpp
 {
+AddressTracker g_subscription_tracker;
+
 ///=============================================================================
 SubscriptionData::Message::Message(
   const zenoh::Bytes & p,
@@ -142,6 +144,7 @@ SubscriptionData::SubscriptionData(
   initialized_(false)
 {
   events_mgr_ = std::make_shared<EventsManager>();
+  g_subscription_tracker.add_address(this);
 }
 
 ///=============================================================================
@@ -282,6 +285,7 @@ SubscriptionData::~SubscriptionData()
       entity_->topic_info().value().name_.c_str()
     );
   }
+  g_subscription_tracker.remove_address(this);
 }
 
 ///=============================================================================

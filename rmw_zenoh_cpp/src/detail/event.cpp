@@ -93,6 +93,20 @@ void DataCallbackManager::trigger_callback()
   }
 }
 
+AddressTracker g_event_tracker;
+
+///=============================================================================
+EventsManager::EventsManager()
+{
+  g_event_tracker.add_address(this);
+}
+
+///=============================================================================
+EventsManager::~EventsManager()
+{
+  g_event_tracker.remove_address(this);
+}
+
 ///=============================================================================
 void EventsManager::event_set_callback(
   rmw_zenoh_event_type_t event_id,

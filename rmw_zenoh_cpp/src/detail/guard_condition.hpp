@@ -23,11 +23,14 @@
 
 namespace rmw_zenoh_cpp
 {
+extern AddressTracker g_guard_condition_tracker;
+
 ///=============================================================================
 class GuardCondition final
 {
 public:
   GuardCondition();
+  ~GuardCondition();
 
   // Sets has_triggered_ to true and calls notify_one() on condition_variable_ if set.
   void trigger();

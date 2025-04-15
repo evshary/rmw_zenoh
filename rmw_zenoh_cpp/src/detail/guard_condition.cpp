@@ -20,11 +20,20 @@
 
 namespace rmw_zenoh_cpp
 {
+AddressTracker g_guard_condition_tracker;
+
 ///=============================================================================
 GuardCondition::GuardCondition()
 : has_triggered_(false),
   wait_set_data_(nullptr)
 {
+  g_guard_condition_tracker.add_address(this);
+}
+
+///=============================================================================
+GuardCondition::~GuardCondition()
+{
+  g_guard_condition_tracker.remove_address(this);
 }
 
 ///=============================================================================

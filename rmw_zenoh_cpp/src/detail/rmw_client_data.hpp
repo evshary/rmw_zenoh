@@ -41,6 +41,7 @@
 
 namespace rmw_zenoh_cpp
 {
+extern AddressTracker g_client_tracker;
 
 ///=============================================================================
 class ClientData final : public std::enable_shared_from_this<ClientData>
