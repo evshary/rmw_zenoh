@@ -17,14 +17,24 @@
 
 #include "guard_condition.hpp"
 #include "rmw_wait_set_data.hpp"
+#include <thread>
 
 namespace rmw_zenoh_cpp
 {
 ///=============================================================================
 GuardCondition::GuardCondition()
-: has_triggered_(false),
-  wait_set_data_(nullptr)
+: has_triggered_(false)
 {
+  wait_set_data_.store(nullptr, std::memory_order_release);
+}
+
+GuardCondition::~GuardCondition()
+{
+  // If wait_set_data_ is not nullptr, that means GuardCondition is still used inside rmw_wait.
+  // We need to wait until rmw_wait is finished before destroying the GuardCondition.
+  while (wait_set_data_.load(std::memory_order_acquire) != nullptr) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
 }
 
 ///=============================================================================
@@ -37,10 +47,11 @@ void GuardCondition::trigger()
   // be called
   has_triggered_ = true;
 
-  if (wait_set_data_ != nullptr) {
-    std::lock_guard<std::mutex> wait_set_lock(wait_set_data_->condition_mutex);
-    wait_set_data_->triggered = true;
-    wait_set_data_->condition_variable.notify_one();
+  auto wait_set_data = wait_set_data_.load(std::memory_order_acquire);
+  if (wait_set_data != nullptr) {
+    std::lock_guard<std::mutex> wait_set_lock(wait_set_data->condition_mutex);
+    wait_set_data->triggered = true;
+    wait_set_data->condition_variable.notify_one();
   }
 }
 
@@ -52,7 +63,7 @@ bool GuardCondition::check_and_attach_condition_if_not(rmw_wait_set_data_t * wai
     return true;
   }
 
-  wait_set_data_ = wait_set_data;
+  wait_set_data_.store(wait_set_data, std::memory_order_release);
 
   return false;
 }
@@ -61,7 +72,7 @@ bool GuardCondition::check_and_attach_condition_if_not(rmw_wait_set_data_t * wai
 bool GuardCondition::detach_condition_and_is_trigger_set()
 {
   std::lock_guard<std::mutex> lock(internal_mutex_);
-  wait_set_data_ = nullptr;
+  wait_set_data_.store(nullptr, std::memory_order_release);
 
   bool ret = has_triggered_;
 
