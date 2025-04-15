@@ -31,10 +31,16 @@ GuardCondition::GuardCondition()
 GuardCondition::~GuardCondition()
 {
   // If wait_set_data_ is not nullptr, that means GuardCondition is still used inside rmw_wait.
-  // We need to wait until rmw_wait is finished before destroying the GuardCondition.
-  while (wait_set_data_.load(std::memory_order_acquire) != nullptr) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  if (wait_set_data_.load(std::memory_order_acquire) == nullptr) {
+    return;
   }
+
+  std::unique_lock<std::mutex> lock(internal_mutex_);
+  
+  // We need to wait until rmw_wait is finished before destroying the GuardCondition.
+  detach_cv_.wait(lock, [&]() {
+    return wait_set_data_.load(std::memory_order_acquire) == nullptr;
+  });
 }
 
 ///=============================================================================
@@ -73,6 +79,9 @@ bool GuardCondition::detach_condition_and_is_trigger_set()
 {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   wait_set_data_.store(nullptr, std::memory_order_release);
+  
+  // Notify any thread that might be waiting on detach
+  detach_cv_.notify_all();
 
   bool ret = has_triggered_;
 

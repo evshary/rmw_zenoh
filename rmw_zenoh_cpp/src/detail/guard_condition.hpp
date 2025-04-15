@@ -40,6 +40,8 @@ public:
 
 private:
   mutable std::mutex internal_mutex_;
+  std::condition_variable detach_cv_;
+
   bool has_triggered_;
   std::atomic<rmw_wait_set_data_t *> wait_set_data_;
 };
